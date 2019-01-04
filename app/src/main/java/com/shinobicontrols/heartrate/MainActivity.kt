@@ -11,7 +11,7 @@ import com.shinobicontrols.charts.Annotation
 import java.util.*
 
 class MainActivity : ShinobiChart.OnInternalLayoutListener
-        ,AppCompatActivity() {
+        , AppCompatActivity() {
     private lateinit var shinobiChart: ShinobiChart
     private lateinit var orientationStrategy: ScreenOrientationStrategy
     private val maxImagePixelSizes = MaxImagePixelSizes(0, 0)
@@ -29,21 +29,36 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
 
         //Only create the chart if it has not been created before
         if (savedInstanceState == null) {
-            val xAxis = DateTimeAxis().apply {
-                enableGesturePanning(true)
-                enableGestureZooming(true)
-            }
-            val yAxis = NumberAxis(NumberRange(40.0, 165.0))
+            val xAxis = getXAxis()
+            val yAxis = getYAxis(YAxisType.Y, resources)
+            val reverseYAxis = getYAxis(YAxisType.REVERSE_Y,
+                    resources)
             shinobiChart.xAxis = xAxis
             shinobiChart.yAxis = yAxis
-            val bpmSeries = LineSeries()
-            val bpmDataAdapter = SimpleDataAdapter<Date, Double>()
-            populateDataAdapter(bpmDataAdapter, getString(R.string.hr_filename),
+            val bpmSeries = getSeries(SeriesType.HEART_RATE,
                     applicationContext)
+            val msMorningSeries = getSeries(SeriesType.MORNING_WALK,
+                    applicationContext)
+            val msLunchSeries = getSeries(SeriesType.LUNCH_RUN,
+                    applicationContext)
+            val msEveningSeries = getSeries(SeriesType.EVENING_WALK,
+                    applicationContext)
+            val bpmDataAdapter: DataAdapter<Date, Double> = getDataAdapter(bpmSeries)
+            val msMorningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msMorningSeries)
+            val msLunchDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msLunchSeries)
+            val msEveningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msEveningSeries)
+            enableSmoothing(arrayOf(bpmSeries, msMorningSeries,
+                    msLunchSeries, msEveningSeries))
             bpmSeries.dataAdapter = NthPointSampler<Date, Double>(bpmDataAdapter, 30)
-            bpmSeries.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
-            styleBpmSeries(bpmSeries, applicationContext)
-            shinobiChart.addSeries(bpmSeries)
+            msMorningSeries.dataAdapter = NthPointSampler(msMorningDataAdapter, 5)
+            msLunchSeries.dataAdapter = NthPointSampler(msLunchDataAdapter, 5)
+            msEveningSeries.dataAdapter = NthPointSampler(msEveningDataAdapter, 5)
+            with(shinobiChart) {
+                addSeries(bpmSeries)
+                addSeries(msMorningSeries, xAxis, reverseYAxis)
+                addSeries(msLunchSeries, xAxis, reverseYAxis)
+                addSeries(msEveningSeries, xAxis, reverseYAxis)
+            }
             addBandAnnotations(shinobiChart.annotationsManager, xAxis, yAxis, applicationContext)
             styleChart()
             shinobiChart.redrawChart()
@@ -81,6 +96,11 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
             legend.position = Legend.Position.BOTTOM_CENTER
             legend.visibility = View.VISIBLE
         }
+    }
+
+    private fun enableSmoothing(seriesArray: Array<LineSeries>) {
+        for (s in seriesArray)
+            s.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

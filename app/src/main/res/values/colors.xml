@@ -6,6 +6,7 @@
     <color name="colorBpmLow">#DCFFD8</color>
     <color name="colorBpmMedium">#FFFFD6</color>
     <color name="colorBpmHigh">#FFB8D0</color>
+    <color name="colorMsLine">#F142F4</color>
     <color name="colorBpmLine">#4253F4</color>
     <color name="colorBandAnnotation">#CCEEFF</color>
 </resources>

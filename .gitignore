@@ -1,22 +1,11 @@
-# built application files
-*.apk
-*.ap_
-
 # library files
 *.aar
 shinobicontrols-android-charts-premium-java-1.9.5-3/
 shinobicharts-android-advanced-charting-kit-standard-java-1.0.1-0/
 
-# files for the dex VM
-*.dex
-
-# Java class files
-*.class
-
 # generated files
 bin/
 gen/
-out/
 
 # Maven
 target/
@@ -52,18 +41,11 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
-**/.idea/workspace.xml
 **/.idea/tasks.xml
 **/.idea/datasources.xml
 **/.idea/dataSources.ids
-**/.idea/gradle.xml
-**/.idea/misc.xml
-**/.idea/modules.xml
-**/.idea/libraries
 **/.idea/dictionaries
 **/.idea/.name
-**/.idea/caches/build_file_checksums.ser
-**/.idea/vcs.xml
 **/captures
 **/.navigation
 **/.externalNativeBuild
@@ -75,3 +57,5 @@ Thumbs.db
 # Random file that was being ignored but should not be
 !TestResultFragment.java
 compiler.xml
+.idea/
+app/libs/

@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">HeartRate</string>
     <string name="hr_series_title">Heart rate (bpm)</string>
+    <string name="pace_series_title">Pace (minutes/mi)</string>
+    <string name="morning_walk_filename">ms-morning.txt</string>
+    <string name="evening_walk_filename">ms-evening.txt</string>
+    <string name="lunch_run_filename">ms-lunch.txt</string>
     <string name="hr_filename">bpm.txt</string>
 </resources>
