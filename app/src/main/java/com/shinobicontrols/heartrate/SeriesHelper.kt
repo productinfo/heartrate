@@ -106,6 +106,7 @@ private fun styleMsSeries(msSeries: LineSeries, context: Context) {
     with(msSeries) {
         style.lineColor = ContextCompat.getColor(context, R.color.colorMsLine)
         title = context.getString(R.string.pace_series_title)
+        visibility = Series.INVISIBLE
         isShownInLegend = false
     }
 }

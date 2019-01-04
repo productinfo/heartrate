@@ -1,21 +1,28 @@
 package com.shinobicontrols.heartrate
 
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.TextPaint
 import android.view.View
+import com.shinobicontrols.advancedcharting.animation.AxisSpanAnimationRunner
 import com.shinobicontrols.advancedcharting.sampling.NthPointSampler
 import com.shinobicontrols.advancedcharting.smoothing.CatmullRomSplineSmoother
 import com.shinobicontrols.charts.*
 import com.shinobicontrols.charts.Annotation
 import java.util.*
+import kotlin.collections.ArrayList
 
-class MainActivity : ShinobiChart.OnInternalLayoutListener
-        , AppCompatActivity() {
+class MainActivity : ShinobiChart.OnInternalLayoutListener,
+        ShinobiChart.OnTickMarkDrawListener, AppCompatActivity() {
     private lateinit var shinobiChart: ShinobiChart
     private lateinit var orientationStrategy: ScreenOrientationStrategy
     private val maxImagePixelSizes = MaxImagePixelSizes(0, 0)
     private val viewAnnotations = ArrayList<Annotation>()
+    private val labelPaint = TextPaint()
+    private val enableSmoothing = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,11 +31,14 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
                 supportFragmentManager.findFragmentById(R.id.chart) as SupportChartFragment
         shinobiChart = supportChartFragment.shinobiChart
         shinobiChart.setOnInternalLayoutListener(this)
+        shinobiChart.setOnTickMarkDrawListener(this)
         orientationStrategy = ScreenOrientationStrategyFactory.getScreenOrientationStrategy(
                 resources.configuration.orientation, maxImagePixelSizes)
+        updateLabelPaint(labelPaint, resources)
 
         //Only create the chart if it has not been created before
         if (savedInstanceState == null) {
+            styleChart()
             val xAxis = getXAxis()
             val yAxis = getYAxis(YAxisType.Y, resources)
             val reverseYAxis = getYAxis(YAxisType.REVERSE_Y,
@@ -43,11 +53,16 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
                     applicationContext)
             val msEveningSeries = getSeries(SeriesType.EVENING_WALK,
                     applicationContext)
+            val stackingToken = StackingToken.newOverlappingStackingToken()
+            bpmSeries.stackingToken = stackingToken
+            msMorningSeries.stackingToken = stackingToken
+            msLunchSeries.stackingToken = stackingToken
+            msEveningSeries.stackingToken = stackingToken
             val bpmDataAdapter: DataAdapter<Date, Double> = getDataAdapter(bpmSeries)
             val msMorningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msMorningSeries)
             val msLunchDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msLunchSeries)
             val msEveningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msEveningSeries)
-            enableSmoothing(arrayOf(bpmSeries, msMorningSeries,
+            enableSmoothing(enableSmoothing, arrayOf(bpmSeries, msMorningSeries,
                     msLunchSeries, msEveningSeries))
             bpmSeries.dataAdapter = NthPointSampler<Date, Double>(bpmDataAdapter, 30)
             msMorningSeries.dataAdapter = NthPointSampler(msMorningDataAdapter, 5)
@@ -59,13 +74,66 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
                 addSeries(msLunchSeries, xAxis, reverseYAxis)
                 addSeries(msEveningSeries, xAxis, reverseYAxis)
             }
+            with(xAxis) {
+                addOnRangeChangeListener(createAxisSpanAnimationRunner(msMorningSeries,
+                        createSeriesAnimationCreator()))
+                addOnRangeChangeListener(createAxisSpanAnimationRunner(msLunchSeries,
+                        createSeriesAnimationCreator()))
+                addOnRangeChangeListener(createAxisSpanAnimationRunner(msEveningSeries,
+                        createSeriesAnimationCreator()))
+                addOnRangeChangeListener(createLegendAndPaceTickmarkUpdater(shinobiChart))
+            }
             addBandAnnotations(shinobiChart.annotationsManager, xAxis, yAxis, applicationContext)
-            styleChart()
-            shinobiChart.redrawChart()
         } else {
             maxImagePixelSizes.landscape = savedInstanceState.getInt(MAX_IMAGE_PIXEL_SIZE_LANDSCAPE)
             maxImagePixelSizes.portrait = savedInstanceState.getInt(MAX_IMAGE_PIXEL_SIZE_PORTRAIT)
         }
+        setMsAxisTickVisibility(shinobiChart, false)
+        shinobiChart.redrawChart()
+    }
+
+    private fun styleChart() {
+        with(shinobiChart) {
+            style.plotAreaBackgroundColor = Color.WHITE
+            style.backgroundColor = Color.WHITE
+            legend.position = Legend.Position.BOTTOM_CENTER
+            legend.visibility = View.VISIBLE
+        }
+    }
+
+    private fun enableSmoothing(enable: Boolean, seriesArray: Array<LineSeries>) {
+        //TODO implement your own decision logic, perhaps based on device spec
+        if (enable) {
+            for (s in seriesArray)
+                s.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
+        }
+    }
+
+    private fun createSeriesAnimationCreator(): SeriesAnimationCreator<Float, Float> {
+
+        return object : SeriesAnimationCreator<Float, Float> {
+
+            val fadeAnimationCreator = FadeAnimationCreator()
+            override fun createExitAnimation(p0: Series<*>?): Animation<Float> {
+                return fadeAnimationCreator.createExitAnimation(p0)
+            }
+
+            override fun createEntryAnimation(p0: Series<*>?): Animation<Float> {
+                return fadeAnimationCreator.createEntryAnimation(p0)
+            }
+        }
+    }
+
+    private fun createAxisSpanAnimationRunner(lineSeries: LineSeries,
+                                              seriesAnimationCreator:
+                                              SeriesAnimationCreator<Float, Float>):
+            AxisSpanAnimationRunner {
+        return AxisSpanAnimationRunner.builder(lineSeries)
+                .withInAnimation(seriesAnimationCreator.createEntryAnimation(lineSeries))
+                .withOutAnimation(seriesAnimationCreator.createExitAnimation(lineSeries))
+                .withUpperTransition(DateFrequency(3, DateFrequency.Denomination.HOURS),
+                        DateFrequency(90, DateFrequency.Denomination.MINUTES))
+                .build()
     }
 
     override fun onDestroy() {
@@ -89,18 +157,14 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener
         shinobiChart.xAxis.setCurrentDisplayedRangePreservedOnUpdate(true)
     }
 
-    private fun styleChart() {
-        with(shinobiChart) {
-            style.plotAreaBackgroundColor = Color.WHITE
-            style.backgroundColor = Color.WHITE
-            legend.position = Legend.Position.BOTTOM_CENTER
-            legend.visibility = View.VISIBLE
+    override fun onDrawTickMark(p0: Canvas?, p1: TickMark?, p2: Rect?, p3: Rect?, p4: Axis<*, *>?) {
+        ChartUtils.drawTickMarkLine(p0, p1)
+        val x = p2!!.centerX()
+        val y = p2.centerY()
+        if (p4!! == shinobiChart.allYAxes[1]) {
+            p1!!.labelText = convertLabelSign(p1.labelText)
         }
-    }
-
-    private fun enableSmoothing(seriesArray: Array<LineSeries>) {
-        for (s in seriesArray)
-            s.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
+        ChartUtils.drawText(p0, p1!!.labelText, x, y, labelPaint)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

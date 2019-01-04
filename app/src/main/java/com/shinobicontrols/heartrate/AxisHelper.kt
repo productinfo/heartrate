@@ -1,10 +1,11 @@
 package com.shinobicontrols.heartrate
 
 import android.content.res.Resources
-import com.shinobicontrols.charts.Axis
-import com.shinobicontrols.charts.DateTimeAxis
-import com.shinobicontrols.charts.NumberAxis
-import com.shinobicontrols.charts.NumberRange
+import android.graphics.Color
+import android.graphics.Paint
+import android.text.TextPaint
+import android.view.View
+import com.shinobicontrols.charts.*
 
 enum class YAxisType {
     Y, REVERSE_Y
@@ -23,6 +24,48 @@ fun getYAxis(yAxisType: YAxisType,
         YAxisType.Y -> createYAxis()
         YAxisType.REVERSE_Y -> createReverseYAxis(resources)
     }
+}
+
+fun updateLabelPaint(labelPaint: TextPaint, resources: Resources) {
+    with(labelPaint) {
+        textAlign = Paint.Align.CENTER
+        isAntiAlias = true
+        color = Color.BLACK
+        textSize = 16f * resources.displayMetrics.scaledDensity
+    }
+}
+
+fun convertLabelSign(labelText: String): String {
+    return labelText.toInt().let {
+        (it * -1).toString()
+    }
+}
+
+fun createLegendAndPaceTickmarkUpdater(shinobiChart: ShinobiChart):
+        Axis.OnRangeChangeListener {
+    return object : Axis.OnRangeChangeListener {
+        override fun onRangeChange(p0: Axis<*, *>?) {
+            updateLegendAndTicks()
+            shinobiChart.redrawChart()
+        }
+
+        private fun updateLegendAndTicks() {
+            val visible = seriesIsVisible(shinobiChart.series[1])
+            val style = shinobiChart.getYAxisForSeries(shinobiChart.series[1]).getStyle()
+            style.tickStyle.setMajorTicksShown(visible)
+            style.tickStyle.setLabelsShown(visible)
+            shinobiChart.series[1].isShownInLegend = visible
+        }
+
+        private fun seriesIsVisible(series: Series<*>): Boolean {
+            return series.visibility == View.VISIBLE && series.alpha == 1.0f
+        }
+    }
+}
+
+fun setMsAxisTickVisibility(shinobiChart: ShinobiChart, visible: Boolean) {
+    shinobiChart.allYAxes[1].getStyle().tickStyle.setLabelsShown(visible)
+    shinobiChart.allYAxes[1].getStyle().tickStyle.setMajorTicksShown(visible)
 }
 
 private fun createYAxis(): NumberAxis {
