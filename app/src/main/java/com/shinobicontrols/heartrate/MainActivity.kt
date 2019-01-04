@@ -3,6 +3,7 @@ package com.shinobicontrols.heartrate
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.shinobicontrols.advancedcharting.sampling.NthPointSampler
+import com.shinobicontrols.advancedcharting.smoothing.CatmullRomSplineSmoother
 import com.shinobicontrols.charts.*
 import java.util.*
 
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
             populateDataAdapter(bpmDataAdapter, getString(R.string.hr_filename),
                     applicationContext)
             bpmSeries.dataAdapter = NthPointSampler<Date, Double>(bpmDataAdapter, 30)
+            bpmSeries.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
             styleBpmSeries(bpmSeries, applicationContext)
             shinobiChart.addSeries(bpmSeries)
         }
