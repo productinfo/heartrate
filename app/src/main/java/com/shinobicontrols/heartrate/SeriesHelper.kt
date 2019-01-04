@@ -43,4 +43,5 @@ fun styleBpmSeries(bpmSeries: LineSeries, context: Context) {
                 .colorBpmHigh), 0.9f))
     }
     bpmSeries.style = seriesStyle
+    bpmSeries.title = context.getString(R.string.hr_series_title)
 }
