@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
             bpmSeries.dataAdapter = dataAdapter
             populateDataAdapter(dataAdapter, getString(R.string.hr_filename),
                     applicationContext)
+            styleBpmSeries(bpmSeries, applicationContext)
             shinobiChart.addSeries(bpmSeries)
         }
     }

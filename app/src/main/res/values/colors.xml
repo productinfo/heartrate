@@ -3,4 +3,8 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorBpmLow">#DCFFD8</color>
+    <color name="colorBpmMedium">#FFFFD6</color>
+    <color name="colorBpmHigh">#FFB8D0</color>
+    <color name="colorBpmLine">#4253F4</color>
 </resources>
