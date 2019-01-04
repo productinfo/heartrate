@@ -2,6 +2,7 @@ package com.shinobicontrols.heartrate
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.shinobicontrols.advancedcharting.sampling.NthPointSampler
 import com.shinobicontrols.charts.*
 import java.util.*
 
@@ -22,10 +23,10 @@ class MainActivity : AppCompatActivity() {
             shinobiChart.xAxis = xAxis
             shinobiChart.yAxis = yAxis
             val bpmSeries = LineSeries()
-            val dataAdapter = SimpleDataAdapter<Date, Double>()
-            bpmSeries.dataAdapter = dataAdapter
-            populateDataAdapter(dataAdapter, getString(R.string.hr_filename),
+            val bpmDataAdapter = SimpleDataAdapter<Date, Double>()
+            populateDataAdapter(bpmDataAdapter, getString(R.string.hr_filename),
                     applicationContext)
+            bpmSeries.dataAdapter = NthPointSampler<Date, Double>(bpmDataAdapter, 30)
             styleBpmSeries(bpmSeries, applicationContext)
             shinobiChart.addSeries(bpmSeries)
         }
