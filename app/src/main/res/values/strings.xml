@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HeartRate</string>
+    <string name="hr_filename">bpm.txt</string>
+</resources>
