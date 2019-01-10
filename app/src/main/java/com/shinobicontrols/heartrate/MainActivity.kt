@@ -21,7 +21,7 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
     private lateinit var orientationStrategy: ScreenOrientationStrategy
     private val maxImagePixelSizes = MaxImagePixelSizes(0, 0)
     private val viewAnnotations = ArrayList<Annotation>()
-    private val labelPaint = TextPaint()
+    private val paceMajorTickLabelPaint = TextPaint()
     private val enableSmoothing = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,46 +34,46 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         shinobiChart.setOnTickMarkDrawListener(this)
         orientationStrategy = ScreenOrientationStrategyFactory.getScreenOrientationStrategy(
                 resources.configuration.orientation, maxImagePixelSizes)
-        updateLabelPaint(labelPaint, resources)
+        updateLabelPaint(paceMajorTickLabelPaint, resources)
 
         //Only create the chart if it has not been created before
         if (savedInstanceState == null) {
             styleChart()
+            //Set up the chart axes
             val xAxis = getXAxis()
             val yAxis = getYAxis(YAxisType.Y, resources)
             val reverseYAxis = getYAxis(YAxisType.REVERSE_Y,
                     resources)
             shinobiChart.xAxis = xAxis
             shinobiChart.yAxis = yAxis
+            //Create each series
             val bpmSeries = getSeries(SeriesType.HEART_RATE,
-                    applicationContext)
-            val msMorningSeries = getSeries(SeriesType.MORNING_WALK,
-                    applicationContext)
-            val msLunchSeries = getSeries(SeriesType.LUNCH_RUN,
-                    applicationContext)
-            val msEveningSeries = getSeries(SeriesType.EVENING_WALK,
-                    applicationContext)
-            val stackingToken = StackingToken.newOverlappingStackingToken()
-            bpmSeries.stackingToken = stackingToken
-            msMorningSeries.stackingToken = stackingToken
-            msLunchSeries.stackingToken = stackingToken
-            msEveningSeries.stackingToken = stackingToken
+                    applicationContext, getString(R.string.hr_filename))
+            val msMorningSeries = getSeries(SeriesType.ACTIVITY,
+                    applicationContext, getString(R.string.morning_walk_filename))
+            val msLunchSeries = getSeries(SeriesType.ACTIVITY,
+                    applicationContext, getString(R.string.lunch_run_filename))
+            val msEveningSeries = getSeries(SeriesType.ACTIVITY,
+                    applicationContext, getString(R.string.evening_walk_filename))
             val bpmDataAdapter: DataAdapter<Date, Double> = getDataAdapter(bpmSeries)
             val msMorningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msMorningSeries)
             val msLunchDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msLunchSeries)
             val msEveningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msEveningSeries)
+            //Enable smoothing and sampling
             enableSmoothing(enableSmoothing, arrayOf(bpmSeries, msMorningSeries,
                     msLunchSeries, msEveningSeries))
             bpmSeries.dataAdapter = NthPointSampler<Date, Double>(bpmDataAdapter, 30)
             msMorningSeries.dataAdapter = NthPointSampler(msMorningDataAdapter, 5)
             msLunchSeries.dataAdapter = NthPointSampler(msLunchDataAdapter, 5)
             msEveningSeries.dataAdapter = NthPointSampler(msEveningDataAdapter, 5)
+            //Add each series to the chart
             with(shinobiChart) {
                 addSeries(bpmSeries)
                 addSeries(msMorningSeries, xAxis, reverseYAxis)
                 addSeries(msLunchSeries, xAxis, reverseYAxis)
                 addSeries(msEveningSeries, xAxis, reverseYAxis)
             }
+            //Add listeners to the x axis to show the pace series and tick marks on zoom
             with(xAxis) {
                 addOnRangeChangeListener(createAxisSpanAnimationRunner(msMorningSeries,
                         createSeriesAnimationCreator()))
@@ -83,6 +83,10 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
                         createSeriesAnimationCreator()))
                 addOnRangeChangeListener(createLegendAndPaceTickmarkUpdater(shinobiChart))
             }
+            //Register our activities with the annotations helper
+            registerActivities(Pair(ActivityType.WALK, msMorningDataAdapter),
+                    Pair(ActivityType.RUN, msLunchDataAdapter),
+                    Pair(ActivityType.WALK, msEveningDataAdapter))
             addBandAnnotations(shinobiChart.annotationsManager, xAxis, yAxis, applicationContext)
         } else {
             maxImagePixelSizes.landscape = savedInstanceState.getInt(MAX_IMAGE_PIXEL_SIZE_LANDSCAPE)
@@ -102,7 +106,6 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
     }
 
     private fun enableSmoothing(enable: Boolean, seriesArray: Array<LineSeries>) {
-        //TODO implement your own decision logic, perhaps based on device spec
         if (enable) {
             for (s in seriesArray)
                 s.linePathInterpolator = CatmullRomSplineSmoother<Date, Double>(6)
@@ -162,9 +165,9 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         val x = p2!!.centerX()
         val y = p2.centerY()
         if (p4!! == shinobiChart.allYAxes[1]) {
-            p1!!.labelText = convertLabelSign(p1.labelText)
+            p1!!.labelText = convertLabelSign(p1.value as Double)
         }
-        ChartUtils.drawText(p0, p1!!.labelText, x, y, labelPaint)
+        ChartUtils.drawText(p0, p1!!.labelText, x, y, paceMajorTickLabelPaint)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

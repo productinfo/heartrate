@@ -10,11 +10,11 @@ import java.io.InputStreamReader
 import java.util.*
 
 enum class SeriesType {
-    HEART_RATE, MORNING_WALK, LUNCH_RUN, EVENING_WALK
+    HEART_RATE, ACTIVITY
 }
 
-fun getSeries(seriesType: SeriesType, context: Context): LineSeries {
-    return createSeries(seriesType, context)
+fun getSeries(seriesType: SeriesType, context: Context, filename: String): LineSeries {
+    return createSeries(seriesType, context, filename)
 }
 
 fun getDataAdapter(lineSeries: LineSeries): DataAdapter<Date, Double> {
@@ -22,9 +22,9 @@ fun getDataAdapter(lineSeries: LineSeries): DataAdapter<Date, Double> {
     return lineSeries.dataAdapter as DataAdapter<Date, Double>
 }
 
-private fun createSeries(seriesType: SeriesType, context: Context): LineSeries {
+private fun createSeries(seriesType: SeriesType, context: Context, filename: String): LineSeries {
     val lineSeries = LineSeries()
-    lineSeries.dataAdapter = createDataAdapter(seriesType, context)
+    lineSeries.dataAdapter = createDataAdapter(seriesType, context, filename)
     when (seriesType) {
         SeriesType.HEART_RATE -> styleBpmSeries(lineSeries, context)
         else -> {
@@ -34,19 +34,11 @@ private fun createSeries(seriesType: SeriesType, context: Context): LineSeries {
     return lineSeries
 }
 
-private fun createDataAdapter(seriesType: SeriesType, context: Context): DataAdapter<Date, Double> {
+private fun createDataAdapter(seriesType: SeriesType, context: Context,
+                              filename: String): DataAdapter<Date, Double> {
     val dataAdapter = SimpleDataAdapter<Date, Double>()
-    populateDataAdapter(seriesType, dataAdapter, getFileName(seriesType, context), context)
+    populateDataAdapter(seriesType, dataAdapter, filename, context)
     return dataAdapter
-}
-
-private fun getFileName(seriesType: SeriesType, context: Context): String {
-    return when (seriesType) {
-        SeriesType.HEART_RATE -> context.getString(R.string.hr_filename)
-        SeriesType.MORNING_WALK -> context.getString(R.string.morning_walk_filename)
-        SeriesType.LUNCH_RUN -> context.getString(R.string.lunch_run_filename)
-        SeriesType.EVENING_WALK -> context.getString(R.string.evening_walk_filename)
-    }
 }
 
 private fun populateDataAdapter(seriesType: SeriesType,

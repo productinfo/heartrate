@@ -12,8 +12,11 @@ import java.util.*
 
 const val MAX_IMAGE_PIXEL_SIZE_LANDSCAPE = "maxImagePixelSizeLandscape"
 const val MAX_IMAGE_PIXEL_SIZE_PORTRAIT = "maxImagePixelSizePortrait"
-private val activityStartEndDatePairs = createActivityStartEndDatePairs()
+private val activityStartEndDatePairs = ArrayList<ActivityStartEndDatePair>()
 
+enum class ActivityType {
+    WALK, RUN
+}
 
 fun addBandAnnotations(annotationsManager: AnnotationsManager,
                        xAxis: DateTimeAxis,
@@ -36,7 +39,7 @@ fun addViewAnnotations(annotationsManager: AnnotationsManager,
                        context: Context,
                        viewAnnotations: ArrayList<Annotation>) {
     val calculatedViewAnnotationPixelSize =
-            calculateViewAnnotationPixelSize(activityStartEndDatePairs[0].startDate,
+            getViewAnnotationPixelSize(activityStartEndDatePairs[0].startDate,
                     activityStartEndDatePairs[0].endDate, xAxis)
     if (!maxImagePixelSizes.isSet())
         calculateMaxViewAnnotationPixelSizes(calculatedViewAnnotationPixelSize, orientationStrategy,
@@ -54,33 +57,19 @@ fun addViewAnnotations(annotationsManager: AnnotationsManager,
     }
 }
 
-private fun createActivityStartEndDatePairs(): ArrayList<ActivityStartEndDatePair> {
-    val activityStartEndDatePairs = ArrayList<ActivityStartEndDatePair>()
-    val calendar = GregorianCalendar()
-    //Morning walk
-    calendar.set(2018, Calendar.SEPTEMBER, 4, 8, 0, 0)
-    var activityStart = calendar.time
-    calendar.add(Calendar.MINUTE, 30)
-    var activityEnd = calendar.time
-    activityStartEndDatePairs.add(ActivityStartEndDatePair(activityStart, activityEnd,
-            R.drawable.ic_walk_round))
+fun registerActivities(vararg activities: Pair<ActivityType, DataAdapter<Date, Double>>) {
+    for (activity in activities) {
+        registerActivity(activity.first, activity.second)
+    }
+}
 
-    //Lunchtime run
-    calendar.set(2018, Calendar.SEPTEMBER, 4, 12, 30, 0)
-    activityStart = calendar.time
-    calendar.add(Calendar.MINUTE, 60)
-    activityEnd = calendar.time
-    activityStartEndDatePairs.add(ActivityStartEndDatePair(activityStart, activityEnd,
-            R.drawable.ic_run_round))
-
-    //Evening run
-    calendar.set(2018, Calendar.SEPTEMBER, 4, 17, 30, 0)
-    activityStart = calendar.time
-    calendar.add(Calendar.MINUTE, 30)
-    activityEnd = calendar.time
-    activityStartEndDatePairs.add(ActivityStartEndDatePair(activityStart, activityEnd,
-            R.drawable.ic_walk_round))
-    return activityStartEndDatePairs
+private fun registerActivity(activityType: ActivityType,
+                             dataAdapter: DataAdapter<Date, Double>) {
+    //get date (x) of first and last data point
+    activityStartEndDatePairs.add(ActivityStartEndDatePair(dataAdapter.get(0).x,
+            dataAdapter.get(dataAdapter.size() - 1).x,
+            if (activityType == ActivityType.WALK) R.drawable.ic_walk_round else R.drawable
+                    .ic_run_round))
 }
 
 private fun addBandAnnotation(annotationsManager: AnnotationsManager,
@@ -111,15 +100,15 @@ private fun addViewAnnotation(annotationsManager: AnnotationsManager,
         setImageResource(resourceId)
     }
     val annotation = annotationsManager.addViewAnnotation(annotationView,
-            calculateActivityTimeMidPoint(startDate, endDate), 150.0,
+            getActivityTimeMidPoint(startDate, endDate), 150.0,
             xAxis,
             yAxis)
     viewAnnotations.add(annotation)
 }
 
-private fun calculateViewAnnotationPixelSize(startDate: Date,
-                                              endDate: Date,
-                                              xAxis: DateTimeAxis): Int {
+private fun getViewAnnotationPixelSize(startDate: Date,
+                                       endDate: Date,
+                                       xAxis: DateTimeAxis): Int {
 
     return ((xAxis.getPixelValueForUserValue(endDate) -
             xAxis.getPixelValueForUserValue(startDate)) * .8).toInt()
@@ -129,17 +118,17 @@ private fun calculateMaxViewAnnotationPixelSizes(currentSize: Int,
                                                  orientationStrategy: ScreenOrientationStrategy,
                                                  windowManager: WindowManager) {
     orientationStrategy.calculateMaxViewAnnotationPixelSizes(currentSize,
-            calculateScreenDimensionRatio(windowManager))
+            getScreenDimensionRatio(windowManager))
 }
 
-private fun calculateScreenDimensionRatio(windowManager: WindowManager): Double {
+private fun getScreenDimensionRatio(windowManager: WindowManager): Double {
     val metrics = DisplayMetrics()
     windowManager.defaultDisplay.getMetrics(metrics)
     return metrics.widthPixels.toDouble() / metrics.heightPixels.toDouble()
 }
 
-private fun calculateActivityTimeMidPoint(startDate: Date,
-                                          endDate: Date): Date {
+private fun getActivityTimeMidPoint(startDate: Date,
+                                    endDate: Date): Date {
     return Date((startDate.time + endDate.time) / 2)
 }
 

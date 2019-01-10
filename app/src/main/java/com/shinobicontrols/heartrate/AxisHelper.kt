@@ -35,8 +35,8 @@ fun updateLabelPaint(labelPaint: TextPaint, resources: Resources) {
     }
 }
 
-fun convertLabelSign(labelText: String): String {
-    return labelText.toInt().let {
+fun convertLabelSign(value: Double): String {
+    return value.toInt().let {
         (it * -1).toString()
     }
 }
