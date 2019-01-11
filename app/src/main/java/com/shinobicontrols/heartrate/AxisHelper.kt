@@ -6,10 +6,13 @@ import android.graphics.Paint
 import android.text.TextPaint
 import android.view.View
 import com.shinobicontrols.charts.*
+import java.text.DecimalFormat
 
 enum class YAxisType {
     Y, REVERSE_Y
 }
+
+val decimalFormat = DecimalFormat("##")
 
 fun getXAxis(): DateTimeAxis {
     return DateTimeAxis().apply {
@@ -36,9 +39,7 @@ fun updateLabelPaint(labelPaint: TextPaint, resources: Resources) {
 }
 
 fun convertLabelSign(value: Double): String {
-    return value.toInt().let {
-        (it * -1).toString()
-    }
+    return decimalFormat.format(value * -1)
 }
 
 fun createLegendAndPaceTickmarkUpdater(shinobiChart: ShinobiChart):

@@ -13,16 +13,12 @@ enum class SeriesType {
     HEART_RATE, ACTIVITY
 }
 
-fun getSeries(seriesType: SeriesType, context: Context, filename: String): LineSeries {
-    return createSeries(seriesType, context, filename)
-}
-
 fun getDataAdapter(lineSeries: LineSeries): DataAdapter<Date, Double> {
     @Suppress("UNCHECKED_CAST")
     return lineSeries.dataAdapter as DataAdapter<Date, Double>
 }
 
-private fun createSeries(seriesType: SeriesType, context: Context, filename: String): LineSeries {
+fun createSeries(seriesType: SeriesType, context: Context, filename: String): LineSeries {
     val lineSeries = LineSeries()
     lineSeries.dataAdapter = createDataAdapter(seriesType, context, filename)
     when (seriesType) {

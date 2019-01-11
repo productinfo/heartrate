@@ -47,13 +47,13 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
             shinobiChart.xAxis = xAxis
             shinobiChart.yAxis = yAxis
             //Create each series
-            val bpmSeries = getSeries(SeriesType.HEART_RATE,
+            val bpmSeries = createSeries(SeriesType.HEART_RATE,
                     applicationContext, getString(R.string.hr_filename))
-            val msMorningSeries = getSeries(SeriesType.ACTIVITY,
+            val msMorningSeries = createSeries(SeriesType.ACTIVITY,
                     applicationContext, getString(R.string.morning_walk_filename))
-            val msLunchSeries = getSeries(SeriesType.ACTIVITY,
+            val msLunchSeries = createSeries(SeriesType.ACTIVITY,
                     applicationContext, getString(R.string.lunch_run_filename))
-            val msEveningSeries = getSeries(SeriesType.ACTIVITY,
+            val msEveningSeries = createSeries(SeriesType.ACTIVITY,
                     applicationContext, getString(R.string.evening_walk_filename))
             val bpmDataAdapter: DataAdapter<Date, Double> = getDataAdapter(bpmSeries)
             val msMorningDataAdapter: DataAdapter<Date, Double> = getDataAdapter(msMorningSeries)
