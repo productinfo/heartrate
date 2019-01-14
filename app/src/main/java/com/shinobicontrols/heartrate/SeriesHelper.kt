@@ -74,8 +74,7 @@ private fun calculateNegativePace(metersPerSecond: Double): Double {
 }
 
 private fun styleBpmSeries(bpmSeries: LineSeries, context: Context) {
-    val seriesStyle = AdvancedLineSeriesStyle()
-    with(seriesStyle) {
+    bpmSeries.style = AdvancedLineSeriesStyle().apply {
         areaLineColor = ContextCompat.getColor(context, R.color.colorBpmLine)
         areaColor = ContextCompat.getColor(context, R.color.colorBpmLine)
         fillStyle = SeriesStyle.FillStyle.GRADIENT
@@ -86,7 +85,6 @@ private fun styleBpmSeries(bpmSeries: LineSeries, context: Context) {
         addGradientStop(GradientStop.create(ContextCompat.getColor(context, R.color
                 .colorBpmHigh), 0.9f))
     }
-    bpmSeries.style = seriesStyle
     bpmSeries.title = context.getString(R.string.hr_series_title)
 }
 
