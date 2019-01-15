@@ -14,15 +14,15 @@ enum class YAxisType {
 
 val decimalFormat = DecimalFormat("##")
 
-fun getXAxis(): DateTimeAxis {
+fun createXAxis(): DateTimeAxis {
     return DateTimeAxis().apply {
         enableGesturePanning(true)
         enableGestureZooming(true)
     }
 }
 
-fun getYAxis(yAxisType: YAxisType,
-             resources: Resources): NumberAxis {
+fun createYAxis(yAxisType: YAxisType,
+                resources: Resources): NumberAxis {
     return when (yAxisType) {
         YAxisType.Y -> createYAxis()
         YAxisType.REVERSE_Y -> createReverseYAxis(resources)

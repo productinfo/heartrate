@@ -40,12 +40,13 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         if (savedInstanceState == null) {
             styleChart()
             //Set up the chart axes
-            val xAxis = getXAxis()
-            val yAxis = getYAxis(YAxisType.Y, resources)
-            val reverseYAxis = getYAxis(YAxisType.REVERSE_Y,
+            val xAxis = createXAxis()
+            val yAxis = createYAxis(YAxisType.Y, resources)
+            val reverseYAxis = createYAxis(YAxisType.REVERSE_Y,
                     resources)
             shinobiChart.xAxis = xAxis
             shinobiChart.yAxis = yAxis
+            xAxis.isCurrentDisplayedRangePreservedOnUpdate = true
             //Create each series
             val bpmSeries = createSeries(SeriesType.HEART_RATE,
                     applicationContext, getString(R.string.hr_filename))
@@ -129,7 +130,7 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
     private fun createAxisSpanAnimationRunner(lineSeries: LineSeries,
                                               seriesAnimationCreator:
                                               SeriesAnimationCreator<Float, Float>):
-            AxisSpanAnimationRunner {
+            AxisSpanAnimationRunner {shinobiChart.setOnInternalLayoutListener(this)
         return AxisSpanAnimationRunner.builder(lineSeries)
                 .withInAnimation(seriesAnimationCreator.createEntryAnimation(lineSeries))
                 .withOutAnimation(seriesAnimationCreator.createExitAnimation(lineSeries))
@@ -142,21 +143,21 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         super.onDestroy()
         for (item in viewAnnotations) {
             shinobiChart.annotationsManager.removeAnnotation(item)
-            shinobiChart.xAxis.setCurrentDisplayedRangePreservedOnUpdate(false)
         }
     }
 
     override fun onInternalLayout(chart: ShinobiChart?) {
-        addViewAnnotations(shinobiChart.annotationsManager,
-                shinobiChart.xAxis as DateTimeAxis,
-                shinobiChart.yAxis as NumberAxis,
-                maxImagePixelSizes,
-                orientationStrategy,
-                windowManager,
-                applicationContext,
-                viewAnnotations)
-        shinobiChart.setOnInternalLayoutListener(null)
-        shinobiChart.xAxis.setCurrentDisplayedRangePreservedOnUpdate(true)
+        if (chart != null) {
+            addViewAnnotations(chart.annotationsManager,
+                    chart.xAxis as DateTimeAxis,
+                    chart.yAxis as NumberAxis,
+                    maxImagePixelSizes,
+                    orientationStrategy,
+                    windowManager,
+                    applicationContext,
+                    viewAnnotations)
+            chart.setOnInternalLayoutListener(null)
+        }
     }
 
     override fun onDrawTickMark(canvas: Canvas?, tickMark: TickMark?, labelBackgroundRect: Rect?,
@@ -171,8 +172,10 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
-        outState?.run { putInt(MAX_IMAGE_PIXEL_SIZE_LANDSCAPE, maxImagePixelSizes.landscape) }
-        outState?.run { putInt(MAX_IMAGE_PIXEL_SIZE_PORTRAIT, maxImagePixelSizes.portrait) }
+        outState?.run {
+            putInt(MAX_IMAGE_PIXEL_SIZE_LANDSCAPE, maxImagePixelSizes.landscape)
+            putInt(MAX_IMAGE_PIXEL_SIZE_PORTRAIT, maxImagePixelSizes.portrait)
+        }
         super.onSaveInstanceState(outState)
     }
 }
