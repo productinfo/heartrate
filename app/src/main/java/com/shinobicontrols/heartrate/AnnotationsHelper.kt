@@ -38,19 +38,20 @@ fun addViewAnnotations(annotationsManager: AnnotationsManager,
                        windowManager: WindowManager,
                        context: Context,
                        viewAnnotations: ArrayList<Annotation>) {
-    val calculatedViewAnnotationPixelSize =
-            getViewAnnotationPixelSize(activityStartEndDatePairs[0].startDate,
-                    activityStartEndDatePairs[0].endDate, xAxis)
-    if (!maxImagePixelSizes.isSet())
-        calculateMaxViewAnnotationPixelSizes(calculatedViewAnnotationPixelSize, orientationStrategy,
+    if (!maxImagePixelSizes.isSet()) {
+        calculateMaxViewAnnotationPixelSizes(getViewAnnotationPixelSize(
+                activityStartEndDatePairs[0].startDate,
+                activityStartEndDatePairs[0].endDate,
+                xAxis),
+                orientationStrategy,
                 windowManager)
+    }
 
     for (item in activityStartEndDatePairs) {
         addViewAnnotation(annotationsManager, xAxis, yAxis,
                 item.startDate,
                 item.endDate,
-                Math.min(calculatedViewAnnotationPixelSize,
-                        orientationStrategy.maxViewAnnotationSizeToUse()),
+                orientationStrategy.maxViewAnnotationSizeToUse(),
                 item.iconResId,
                 context,
                 viewAnnotations)
