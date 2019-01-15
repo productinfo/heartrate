@@ -45,7 +45,7 @@ fun convertLabelSign(value: Double): String {
 fun createLegendAndPaceTickmarkUpdater(shinobiChart: ShinobiChart):
         Axis.OnRangeChangeListener {
     return object : Axis.OnRangeChangeListener {
-        override fun onRangeChange(p0: Axis<*, *>?) {
+        override fun onRangeChange(axis: Axis<*, *>?) {
             updateLegendAndTicks()
             shinobiChart.redrawChart()
         }
@@ -64,11 +64,6 @@ fun createLegendAndPaceTickmarkUpdater(shinobiChart: ShinobiChart):
     }
 }
 
-fun setMsAxisTickVisibility(shinobiChart: ShinobiChart, visible: Boolean) {
-    shinobiChart.allYAxes[1].getStyle().tickStyle.setLabelsShown(visible)
-    shinobiChart.allYAxes[1].getStyle().tickStyle.setMajorTicksShown(visible)
-}
-
 private fun createYAxis(): NumberAxis {
     return NumberAxis(NumberRange(40.0, 165.0))
 }
@@ -77,5 +72,7 @@ private fun createReverseYAxis(resources: Resources): NumberAxis {
     return NumberAxis(NumberRange(-35.0, -3.0)).apply {
         position = Axis.Position.REVERSE
         width = 50f * resources.displayMetrics.scaledDensity
+        getStyle().tickStyle.setLabelsShown(false)
+        getStyle().tickStyle.setMajorTicksShown(false)
     }
 }

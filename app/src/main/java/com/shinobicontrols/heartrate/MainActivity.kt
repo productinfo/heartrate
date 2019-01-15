@@ -92,7 +92,6 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
             maxImagePixelSizes.landscape = savedInstanceState.getInt(MAX_IMAGE_PIXEL_SIZE_LANDSCAPE)
             maxImagePixelSizes.portrait = savedInstanceState.getInt(MAX_IMAGE_PIXEL_SIZE_PORTRAIT)
         }
-        setMsAxisTickVisibility(shinobiChart, false)
         shinobiChart.redrawChart()
     }
 
@@ -117,12 +116,12 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         return object : SeriesAnimationCreator<Float, Float> {
 
             val fadeAnimationCreator = FadeAnimationCreator()
-            override fun createExitAnimation(p0: Series<*>?): Animation<Float> {
-                return fadeAnimationCreator.createExitAnimation(p0)
+            override fun createExitAnimation(series: Series<*>?): Animation<Float> {
+                return fadeAnimationCreator.createExitAnimation(series)
             }
 
-            override fun createEntryAnimation(p0: Series<*>?): Animation<Float> {
-                return fadeAnimationCreator.createEntryAnimation(p0)
+            override fun createEntryAnimation(series: Series<*>?): Animation<Float> {
+                return fadeAnimationCreator.createEntryAnimation(series)
             }
         }
     }
@@ -147,7 +146,7 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         }
     }
 
-    override fun onInternalLayout(p0: ShinobiChart?) {
+    override fun onInternalLayout(chart: ShinobiChart?) {
         addViewAnnotations(shinobiChart.annotationsManager,
                 shinobiChart.xAxis as DateTimeAxis,
                 shinobiChart.yAxis as NumberAxis,
@@ -160,14 +159,15 @@ class MainActivity : ShinobiChart.OnInternalLayoutListener,
         shinobiChart.xAxis.setCurrentDisplayedRangePreservedOnUpdate(true)
     }
 
-    override fun onDrawTickMark(p0: Canvas?, p1: TickMark?, p2: Rect?, p3: Rect?, p4: Axis<*, *>?) {
-        ChartUtils.drawTickMarkLine(p0, p1)
-        val x = p2!!.centerX()
-        val y = p2.centerY()
-        if (p4!! == shinobiChart.allYAxes[1]) {
-            p1!!.labelText = convertLabelSign(p1.value as Double)
+    override fun onDrawTickMark(canvas: Canvas?, tickMark: TickMark?, labelBackgroundRect: Rect?,
+                                tickMarkRect: Rect?, axis: Axis<*, *>?) {
+        ChartUtils.drawTickMarkLine(canvas, tickMark)
+        val x = labelBackgroundRect!!.centerX()
+        val y = labelBackgroundRect.centerY()
+        if (axis!! == shinobiChart.allYAxes[1]) {
+            tickMark!!.labelText = convertLabelSign(tickMark.value as Double)
         }
-        ChartUtils.drawText(p0, p1!!.labelText, x, y, paceMajorTickLabelPaint)
+        ChartUtils.drawText(canvas, tickMark!!.labelText, x, y, paceMajorTickLabelPaint)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
