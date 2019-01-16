@@ -100,11 +100,10 @@ private fun addViewAnnotation(annotationsManager: AnnotationsManager,
         layoutParams = ViewGroup.LayoutParams(size, size)
         setImageResource(resourceId)
     }
-    val annotation = annotationsManager.addViewAnnotation(annotationView,
+    viewAnnotations.add(annotationsManager.addViewAnnotation(annotationView,
             getActivityTimeMidPoint(startDate, endDate), 150.0,
             xAxis,
-            yAxis)
-    viewAnnotations.add(annotation)
+            yAxis))
 }
 
 private fun getViewAnnotationPixelSize(startDate: Date,
